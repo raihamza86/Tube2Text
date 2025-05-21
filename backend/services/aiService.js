@@ -5,33 +5,28 @@ const HF_API_URL = "https://api-inference.huggingface.co/models/facebook/bart-la
 
 async function generateBlogFromTranscript(transcript) {
     try {
-        // Craft a better prompt with specific instructions
-        const prompt = `
-        Transform this YouTube transcript into a professional blog post with these sections:
-        
-        1. Introduction explaining the main concept
-        2. Step-by-step guide (with clear instructions)
-        3. Implementation tips
-        4. Conclusion summarizing key points
-        
-        Requirements:
-        - Remove all video-specific references ("in this video", "watch the video")
-        - Use professional tone
-        - Keep technical details accurate
-        - Format as Markdown with headings
-        
-        Transcript: ${transcript.substring(0, 5000)}
-        `;
+        // Clean transcript first
+        const cleanTranscript = cleanRawTranscript(transcript);
 
         const response = await axios.post(
             HF_API_URL,
             {
-                inputs: prompt,
+                inputs: `Create a detailed technical guide about "${extractMainTopic(cleanTranscript)}" with these sections:
+                
+                ## Introduction
+                ## Requirements
+                ## Step-by-Step Implementation
+                ## Troubleshooting
+                ## Conclusion
+                
+                Write in professional tone without video references. Use technical terms accurately.
+                
+                Content: ${cleanTranscript.substring(0, 4000)}`,
                 parameters: {
-                    max_length: 1000,
-                    min_length: 500,
-                    do_sample: true,
-                    temperature: 0.7
+                    max_length: 1500,
+                    min_length: 800,
+                    temperature: 0.5,
+                    do_sample: false
                 }
             },
             {
@@ -39,7 +34,7 @@ async function generateBlogFromTranscript(transcript) {
                     Authorization: `Bearer ${HF_API_KEY}`,
                     "Content-Type": "application/json"
                 },
-                timeout: 30000
+                timeout: 45000
             }
         );
 
@@ -47,22 +42,36 @@ async function generateBlogFromTranscript(transcript) {
             throw new Error("Invalid response from AI service");
         }
 
-        return formatBlogContent(response.data[0].summary_text);
+        return postProcessContent(response.data[0].summary_text);
     } catch (err) {
-        console.error("Generation Error:", err);
-        throw new Error("Content generation failed. Please try a different video.");
+        console.error("Generation Error:", {
+            message: err.message,
+            status: err.response?.status
+        });
+        throw new Error("Failed to generate quality content. Please try a different video.");
     }
 }
 
-function formatBlogContent(text) {
-    // Advanced cleaning and formatting
+function cleanRawTranscript(text) {
     return text
-        .replace(/\[(Music|Applause|.*?)\]/g, '')
-        .replace(/\b(in this video|like and subscribe|watch the video|click the link)\b/gi, '')
-        .replace(/\n+/g, '\n\n')
-        .replace(/## /g, '\n## ')  // Ensure proper heading spacing
-        .replace(/(http|https):\/\/[^\s]+/g, '')  // Remove URLs
+        .replace(/\[.*?\]/g, '')
+        .replace(/\b(like and subscribe|in this video|watch the video|click the link)\b/gi, '')
+        .replace(/(http|https):\/\/[^\s]+/g, '')
         .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function extractMainTopic(text) {
+    const firstSentence = text.split('.')[0];
+    return firstSentence.replace(/how to/i, '').replace(/i will teach you/i, '').trim();
+}
+
+function postProcessContent(text) {
+    return text
+        .replace(/##\s+/g, '\n## ')
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/Transform this YouTube transcript into a professional blog post/gi, '')
+        .replace(/CNN\.com|CNN iReport|@cnnireport/gi, '')
         .trim();
 }
 
