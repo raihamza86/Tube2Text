@@ -7,15 +7,16 @@ async function generateBlogTitle(transcript) {
         const cleanTranscript = transcript
             .substring(0, 1000)
             .replace(/\[.*?\]/g, '')
-            .replace(/\b(in this video|watch the video)\b/gi, '');
+            .replace(/\b(in this video|watch the video|click the link)\b/gi, '');
 
         const response = await axios.post(
             "https://api-inference.huggingface.co/models/facebook/bart-large-cnn",
             {
-                inputs: `Generate a concise, SEO-friendly title under 60 characters about: ${cleanTranscript}`,
+                inputs: `Generate a professional, SEO-optimized title (50-60 characters) about this technical topic: ${cleanTranscript}`,
                 parameters: {
                     max_length: 60,
-                    num_return_sequences: 1
+                    num_return_sequences: 1,
+                    temperature: 0.7
                 }
             },
             {
@@ -26,10 +27,22 @@ async function generateBlogTitle(transcript) {
         );
 
         let title = response.data[0]?.summary_text || "Technical Guide";
-        return title.replace(/"/g, '').replace(/\.$/g, '').trim();
+        
+        // Clean up title
+        title = title.replace(/"/g, '')
+                    .replace(/\.$/g, '')
+                    .replace(/^how to/i, '')
+                    .trim();
+                    
+        // Ensure proper length
+        if (title.length > 65) {
+            title = title.substring(0, 100) + '...';
+        }
+        
+        return title;
     } catch (err) {
         console.error("Title generation failed, using fallback");
-        return "Complete Technical Implementation Guide";
+        return "Complete Technical Guide";
     }
 }
 
