@@ -1,26 +1,27 @@
 const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-
-const app = express();
+const cors = require('cors');
+const connectDB = require('./config/db');
+const errorHandler = require('./middleware/errorHandler');
 
 dotenv.config();
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/youtube-to-blog';
 
-// Middleware
+// DB Connection
+connectDB();
+
+const app = express();
 app.use(cors());
+app.use(express.json());
+
+// Routes
+const blogRoutes = require('./routes/blogRoutes');
+app.use('/api/blog', blogRoutes);
 
 
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
+// After routes
+app.use(errorHandler);
 
 
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
 
-
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
