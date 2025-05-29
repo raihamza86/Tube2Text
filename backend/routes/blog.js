@@ -1,0 +1,43 @@
+const express = require("express");
+const fs = require("fs");
+
+const downloadAudio = require("../services/downloadAudio");
+const transcribeAudio = require("../services/transcribeAudio");
+const { generateBlog, generateBlogTitle } = require("../services/generateBlog");
+const cleanTranscript = require("../utils/cleanTranscript");
+
+const router = express.Router();
+
+
+router.post("/", async (req, res, next) => {
+    const { youtubeUrl } = req.body;
+
+    if (!youtubeUrl) {
+        return res.status(400).json({ error: "YouTube URL is required" });
+    }
+
+    let audioPath;
+
+    try {
+        audioPath = await downloadAudio(youtubeUrl);
+        const transcript = await transcribeAudio(audioPath);
+        const blogTitle = await generateBlogTitle(transcript);
+        const blogContent = await generateBlog(transcript);
+        const cleanedContent = cleanTranscript(blogContent);
+
+        res.json({ success: true, title: blogTitle, content: cleanedContent });
+    } catch (error) {
+        console.error("Error during blog generation:", error);
+        res.status(500).json({ success: false, error: "Failed to generate blog" });
+    } finally {
+        if (audioPath) {
+            try {
+                await fs.unlink(audioPath);
+            } catch (cleanupErr) {
+                console.warn("Failed to clean up audio file:", cleanupErr.message);
+            }
+        }
+    }
+});
+
+module.exports = router;

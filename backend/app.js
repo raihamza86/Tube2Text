@@ -1,27 +1,22 @@
-const express = require('express');
-const dotenv = require('dotenv');
+require('dotenv').config();
 const cors = require('cors');
 const connectDB = require('./config/db');
-const errorHandler = require('./middleware/errorHandler');
-
-dotenv.config();
-
-// DB Connection
-connectDB();
+const express = require("express");
+const blogRouter = require("./routes/blog");
 
 const app = express();
+
+connectDB();
+
 app.use(cors());
 app.use(express.json());
 
-// Routes
-const blogRoutes = require('./routes/blogRoutes');
-app.use('/api/blog', blogRoutes);
+app.use("/api/blog", blogRouter);
 
-
-// After routes
-app.use(errorHandler);
-
-
+app.use((err, req, res, next) => {
+    console.error("Unhandled error:", err);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
