@@ -8,6 +8,7 @@ import {
 import { MdStyle } from "react-icons/md";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { FiArrowRight } from 'react-icons/fi';
+import { FaInfoCircle } from "react-icons/fa";
 
 const toneOptions = [
   { label: "Default", icon: <FaRegSmile /> },
@@ -104,6 +105,34 @@ const Dropdown = ({ label, icon, value, setValue, options }) => {
   );
 };
 
+const SwitchButton = ({ label, checked, onChange, tooltip }) => (
+  <div className="flex items-center gap-2 text-sm text-white mr-6 relative ">
+    <span>{label}</span>
+
+    {/* Tooltip */}
+    <div className="relative group">
+      <FaInfoCircle className="text-gray-400 cursor-pointer hover:text-white" />
+      <div className="absolute hidden group-hover:block z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs bg-[#2a2e40] text-gray-300 rounded-md shadow-lg whitespace-nowrap">
+        {tooltip}
+        <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-[#2a2e40]"></div>
+      </div>
+    </div>
+
+    {/* Switch */}
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      className={`w-11 h-6 flex items-center cursor-pointer rounded-full px-0.5 transition-colors duration-300 ${checked ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-600 hover:bg-gray-700"}`}
+    >
+      <span
+        className={`h-5 w-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${checked ? "translate-x-5" : "translate-x-0"}`}
+      />
+    </button>
+  </div>
+);
+
+
 const PostGenerator = () => {
   const [formData, setFormData] = useState({
     videoUrl: "",
@@ -111,6 +140,9 @@ const PostGenerator = () => {
     articleLength: "Automatic",
     toneStyle: "Default",
     language: "English (US)",
+    editOutline: false,
+    embedVideo: false,
+    externalLinks: false
   });
 
   const handleChange = (e) => {
@@ -152,14 +184,43 @@ const PostGenerator = () => {
               onChange={handleChange}
               className="w-full bg-[#1a1d2e] text-white px-4 py-3 rounded-md border border-[#3a3f52] hover:border-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             />
+
+            {/* Switch Buttons Row */}
+            <div className="flex flex-wrap items-center gap-4 mt-4 ">
+              <SwitchButton
+                label="Edit Outline?"
+                checked={formData.editOutline}
+                onChange={() =>
+                  setFormData({ ...formData, editOutline: !formData.editOutline })
+                }
+                tooltip="Edit the outline that's generated when writing the artical."
+              />
+              <SwitchButton
+                label="Embed Video"
+                checked={formData.embedVideo}
+                onChange={() =>
+                  setFormData({ ...formData, embedVideo: !formData.embedVideo })
+                }
+                tooltip="Embed the video in the blg post."
+              />
+              <SwitchButton
+                label="External Links?"
+                checked={formData.externalLinks}
+                onChange={() =>
+                  setFormData({ ...formData, externalLinks: !formData.externalLinks })
+                }
+                tooltip="Ai will find relevant links to include in your artical"
+              />
+            </div>
           </div>
 
+          {/* Rest of form fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="mb-1 font-medium flex items-center gap-2">
                 Article Length
                 <div className="relative group inline-flex">
-                   <FaRegQuestionCircle className="text-gray-400 text-base cursor-help hover:text-gray-300 transition-colors" />
+                  <FaInfoCircle className="text-gray-400 text-base cursor-pointer hover:text-gray-300 transition-colors" />
                   <div className="absolute hidden group-hover:block z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-sm bg-[#2a2e40] text-gray-300 rounded-md shadow-lg whitespace-nowrap">
                     Select the desired length of your blog post
                     <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-[#2a2e40]"></div>
@@ -180,7 +241,7 @@ const PostGenerator = () => {
                   <option>Very Long-form</option>
                 </select>
                 <div className="absolute right-4.5 top-1/2 transform -translate-y-1/2 pointer-events-none flex flex-col items-center">
-                  <IoIosArrowUp className="" />
+                  <IoIosArrowUp />
                   <IoIosArrowDown className="-mt-1.5" />
                 </div>
               </div>
@@ -203,15 +264,12 @@ const PostGenerator = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Dropdown
               label="Tone & Writing Style"
-              // icon={<MdStyle />}
               value={formData.toneStyle}
               setValue={(val) => setFormData({ ...formData, toneStyle: val })}
               options={toneOptions}
             />
-
             <Dropdown
               label="Language"
-              // icon={<FaRegSmile />}
               value={formData.language}
               setValue={(val) => setFormData({ ...formData, language: val })}
               options={languages}
