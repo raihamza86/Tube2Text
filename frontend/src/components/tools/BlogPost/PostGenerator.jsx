@@ -4,12 +4,28 @@ import {
   FaRegSmile, FaUserTie, FaBrain, FaRocket, FaHandPeace,
   FaHeart, FaRegLightbulb, FaFeather, FaUserSecret, FaBook,
   FaUserEdit, FaMicrophone, FaLaptop, FaRobot, FaCommentDots,
-  FaRegQuestionCircle
+  FaRegQuestionCircle,
+  FaYoutube
 } from "react-icons/fa";
 import { MdStyle } from "react-icons/md";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
-import { FiArrowRight } from 'react-icons/fi';
+import { FiArrowRight, FiClock } from 'react-icons/fi';
 import { FaInfoCircle } from "react-icons/fa";
+import { FaRegCircleUser } from "react-icons/fa6";
+import { CiClock2 } from "react-icons/ci";
+
+
+const videoData = [
+  {
+    id: 1,
+    thumbnail: "/blog/thumbnail.jpg",
+    title: "Balo Batiyaan Way Mahi (Slowed + Reverb)",
+    source: "youtube.com",
+    channel: "Addiction To Perfection",
+    time: "2 years ago",
+  },
+
+];
 import BlogContent from "./BlogContent";
 
 const toneOptions = [
@@ -210,6 +226,37 @@ const PostGenerator = () => {
               onChange={handleChange}
               className="w-full bg-[#1a1d2e] text-white px-4 py-3 rounded-md border border-[#3a3f52] hover:border-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             />
+
+            <div className="mt-3 space-y-4 group">
+              {videoData.map((video) => (
+                <div
+                  key={video.id}
+                  className="flex bg-[#0d101d] border-1 p-2 border-[#3a3f52] text-white rounded-lg overflow-hidden shadow-md max-w-3xl group-hover:border-gray-600 transition"
+                >
+                  {/* Left: Thumbnail */}
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-40 h-auto object-cover"
+                  />
+
+                  {/* Right: Content */}
+                  <div className="flex flex-col justify-center px-4 ps-5 py-2 space-y-1">
+                    <span className="text-sm text-gray-400">{video.source}</span>
+
+                    <h3 className="font-semibold flex items-center gap-2 text-base">
+                      <FaYoutube className="text-red-600 text-lg" />
+                      {video.title}
+                    </h3>
+
+                    <p className="text-gray-400 text-sm flex items-center space-x-2">
+                      <FaRegCircleUser /> {video.channel}  <FiClock className="ms-4 me-1.5"/> {video.time}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             {/* Switch Buttons Row */}
             {/* <div className="flex flex-wrap items-center gap-4 mt-4 ">
               <SwitchButton
