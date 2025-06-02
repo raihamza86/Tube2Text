@@ -1,5 +1,6 @@
 const express = require("express");
 const fs = require("fs");
+const play = require("play-dl");
 
 const downloadAudio = require("../services/downloadAudio");
 const transcribeAudio = require("../services/transcribeAudio");
@@ -39,5 +40,32 @@ router.post("/", async (req, res, next) => {
         }
     }
 });
+
+router.post("/details", async (req, res) => {
+    const { youtubeUrl } = req.body;
+
+    if (!youtubeUrl) {
+        return res.status(400).json({ error: "YouTube URL is required" });
+    }
+
+    try {
+        const info = await play.video_info(youtubeUrl);
+        const video = info.video_details;
+
+        res.json({
+            success: true,
+            title: video.title,
+            description: video.description,
+            embedUrl: `https://www.youtube.com/embed/${video.id}`,
+            thumbnail: video.thumbnails?.[video.thumbnails.length - 1]?.url || null,
+            durationInSec: video.durationInSec,
+            channel: video.channel.name
+        });
+    } catch (error) {
+        console.error("Error fetching video details:", error.message);
+        res.status(500).json({ success: false, error: "Failed to retrieve video details" });
+    }
+});
+
 
 module.exports = router;
