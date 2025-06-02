@@ -76,3 +76,7 @@ This will run the React client at http://localhost:5173
 
 📂 Temporary Files
 All downloaded audio files are stored in /temp/ and deleted after transcription to keep the server clean.
+
+📬 Contact
+For questions or suggestions:
+rahamza186@gmail.com | LinkedIn: https://www.linkedin.com/in/raihamzamajeed
