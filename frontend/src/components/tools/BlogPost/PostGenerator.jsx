@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
 import {
   FaRegSmile, FaUserTie, FaBrain, FaRocket, FaHandPeace,
   FaHeart, FaRegLightbulb, FaFeather, FaUserSecret, FaBook,
@@ -9,6 +10,7 @@ import { MdStyle } from "react-icons/md";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { FiArrowRight } from 'react-icons/fi';
 import { FaInfoCircle } from "react-icons/fa";
+import BlogContent from "./BlogContent";
 
 const toneOptions = [
   { label: "Default", icon: <FaRegSmile /> },
@@ -134,24 +136,48 @@ const SwitchButton = ({ label, checked, onChange, tooltip }) => (
 
 
 const PostGenerator = () => {
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState(null);
+
+
   const [formData, setFormData] = useState({
-    videoUrl: "",
-    primaryKeyword: "",
-    articleLength: "Automatic",
-    toneStyle: "Default",
-    language: "English (US)",
-    editOutline: false,
-    embedVideo: false,
-    externalLinks: false
+    youtubeUrl: "",
+    // primaryKeyword: "",
+    // articleLength: "Automatic",
+    // toneStyle: "Default",
+    // language: "English (US)",
+    // editOutline: false,
+    // embedVideo: false,
+    // externalLinks: false
   });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = () => {
-    console.log("Form Data:", formData);
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError("");
+    setResult(null);
+
+    try {
+      const response = await axios.post("http://localhost:5000/api/blog", formData, { withCredentials: true });
+      console.log("response is..", response);
+      setResult(response.data);
+    } catch (err) {
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Failed to generate blog. Please try again.");
+      }
+      console.log("Error is..", err);
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   return (
     <div className=" bg-[#0d101d] text-white px-4 py-10 flex items-center justify-center">
@@ -178,15 +204,14 @@ const PostGenerator = () => {
             </label>
             <input
               type="text"
-              name="videoUrl"
+              name="youtubeUrl"
               placeholder="https://www.youtube.com/watch?v=..."
-              value={formData.videoUrl}
+              value={formData.youtubeUrl}
               onChange={handleChange}
               className="w-full bg-[#1a1d2e] text-white px-4 py-3 rounded-md border border-[#3a3f52] hover:border-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             />
-
             {/* Switch Buttons Row */}
-            <div className="flex flex-wrap items-center gap-4 mt-4 ">
+            {/* <div className="flex flex-wrap items-center gap-4 mt-4 ">
               <SwitchButton
                 label="Edit Outline?"
                 checked={formData.editOutline}
@@ -211,11 +236,11 @@ const PostGenerator = () => {
                 }
                 tooltip="Ai will find relevant links to include in your artical"
               />
-            </div>
+            </div> */}
           </div>
 
           {/* Rest of form fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="mb-1 font-medium flex items-center gap-2">
                 Article Length
@@ -259,9 +284,9 @@ const PostGenerator = () => {
                 className="w-full bg-[#1a1d2e] text-white px-4 py-3 rounded-md border border-[#3a3f52] hover:border-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-          </div>
+          </div> */}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Dropdown
               label="Tone & Writing Style"
               value={formData.toneStyle}
@@ -274,15 +299,32 @@ const PostGenerator = () => {
               setValue={(val) => setFormData({ ...formData, language: val })}
               options={languages}
             />
-          </div>
+          </div> */}
 
           <div className="pt-4">
             <button
+              disabled={loading}
               onClick={handleSubmit}
               className="w-full bg-[#6c4efc] hover:bg-[#5936e9] text-white font-semibold py-2.5 px-6 rounded-md transition-all duration-300 text-center cursor-pointer flex items-center justify-center gap-2"
             >
-              SIGN UP & TRY FOR FREE <FiArrowRight size={20} />
+              {loading ? "Generating..." : "Generate Blog Post"}
             </button>
+
+
+            {error && (
+              <div className="mt-4 text-red-500 font-medium">{error}</div>
+            )}
+
+            {/* Data is: */}
+            {result && (
+              <div className="mt-10 bg-[#1a1d2e] p-6 rounded-lg border border-[#3a3f52]">
+                {/* <h2 className="text-xl font-bold mb-4">{result.title}</h2> */}
+                {/* <div className="text-gray-300 whitespace-pre-line">{result.content}</div> */}
+                <BlogContent markdown={result} />
+              </div>
+            )}
+
+
             <p className="text-center text-gray-400 text-sm mt-2">
               <span className="font-semibold">191 creators</span> have used this tool in the past week
             </p>
