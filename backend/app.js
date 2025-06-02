@@ -1,12 +1,9 @@
 require('dotenv').config();
 const cors = require('cors');
-const connectDB = require('./config/db');
 const express = require("express");
 const blogRouter = require("./routes/blog");
 
 const app = express();
-
-connectDB();
 
 const corsOptions = {
     origin: ['http://localhost:5173'],

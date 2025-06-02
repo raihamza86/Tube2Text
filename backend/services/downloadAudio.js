@@ -1,47 +1,40 @@
-const { exec } = require("child_process");
-const path = require("path");
 const fs = require("fs");
+const path = require("path");
 const { v4: uuidv4 } = require("uuid");
+const { default: YtdlpWrap } = require("yt-dlp-wrap");
 
-module.exports = function downloadAudio(youtubeUrl) {
-    return new Promise((resolve, reject) => {
-        if (!youtubeUrl || typeof youtubeUrl !== "string") {
-            return reject(new Error("Invalid YouTube URL"));
-        }
 
-        const tempDir = path.join(__dirname, "../temp");
+const ytdlpWrap = new YtdlpWrap();
+const tempDir = path.join(__dirname, "../temp");
 
-        // Ensure temp directory exists
-        if (!fs.existsSync(tempDir)) {
-            try {
-                fs.mkdirSync(tempDir, { recursive: true });
-            } catch (mkdirErr) {
-                return reject(new Error("Failed to create temp directory: " + mkdirErr.message));
-            }
-        }
+if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+}
 
-        const outputPath = path.join(tempDir, `${uuidv4()}.mp3`);
-        const ytDlpPath = path.join("C:", "yt-dlp", "yt-dlp.exe");
+async function downloadAudio(youtubeUrl) {
+    if (!youtubeUrl || typeof youtubeUrl !== "string") {
+        throw new Error("Invalid YouTube URL");
+    }
 
-        // Check if yt-dlp exists
-        if (!fs.existsSync(ytDlpPath)) {
-            return reject(new Error(`yt-dlp.exe not found at ${ytDlpPath}`));
-        }
+    const outputPath = path.join(tempDir, `${uuidv4()}.mp3`);
 
-        const command = `"${ytDlpPath}" -x --audio-format mp3 -o "${outputPath}" "${youtubeUrl}"`;
+    try {
+        await ytdlpWrap.execPromise([
+            youtubeUrl,
+            "-x",
+            "--audio-format", "mp3",
+            "-o", outputPath
+        ]);
+    } catch (err) {
+        console.error("yt-dlp-wrap failed:", err);
+        throw new Error("Audio download failed");
+    }
 
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                console.error("yt-dlp command failed:", stderr);
-                return reject(new Error("yt-dlp command failed: " + stderr));
-            }
+    if (!fs.existsSync(outputPath)) {
+        throw new Error("Audio file was not created");
+    }
 
-            // Confirm file exists
-            if (!fs.existsSync(outputPath)) {
-                return reject(new Error("Audio file was not created"));
-            }
+    return outputPath;
+}
 
-            resolve(outputPath);
-        });
-    });
-};
+module.exports = downloadAudio;
